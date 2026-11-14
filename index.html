@@ -43,6 +43,8 @@ header{display:flex;align-items:center;gap:14px;padding-block:12px;padding-left:
 .who-b .nm2{display:grid;line-height:1.15;text-align:left}
 .who-b .nm2 b{font-size:12.5px}
 .who-b .nm2 small{font-size:11px;color:var(--muted)}
+.traits{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.traits span{font:600 11px var(--mono);border:1px solid;border-radius:999px;padding:2px 9px}
 .who-b.on{border-color:var(--accent);background:rgba(95,214,220,.14)}
 .loc-b{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;white-space:nowrap;flex:none;font-size:12px;font-weight:600;color:var(--muted)}
 .loc-b .ic{width:12px;height:12px;border-radius:50%;flex:none}
@@ -175,6 +177,8 @@ hr{border:0;border-top:1px solid var(--line);margin:2px 0}
       <div>
         <h2 id="crewname">Crew</h2>
         <p class="sub" id="crewsub"></p>
+        <p class="sub" id="crewbio" style="margin-top:6px;font-style:italic;color:var(--ink)"></p>
+        <div class="traits" id="crewtraits"></div>
       </div>
       <div class="sites" id="sites"></div>
       <div class="card" id="card" hidden>
@@ -266,10 +270,14 @@ hr{border:0;border-top:1px solid var(--line);margin:2px 0}
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const rnd=mulberry32(42), N=()=>(rnd()+rnd()+rnd()-1.5)/1.5;
 const CREW=[
-  {id:'C1',name:'Cmdr. Aria Vega',role:'Commander'},
-  {id:'C2',name:'Eng. Kiran Rao',role:'Flight engineer'},
-  {id:'C3',name:'Dr. Mei Lin',role:'Mission scientist'},
-  {id:'C4',name:'Spec. Tobi Okafor',role:'Mission specialist'}
+  {id:'C1',name:'Cmdr. Aria Vega',role:'Commander',color:'#e07a3f',size:1.0,
+   bio:'Calm under pressure. Runs the morning briefing and checks on everyone else first.',traits:['Steady leader','Early riser','Runner']},
+  {id:'C2',name:'Eng. Kiran Rao',role:'Flight engineer',color:'#f2c14e',size:1.05,
+   bio:'Keeps the ship alive. A night owl who skips sleep when a system breaks.',traits:['Problem solver','Night owl','Coffee ×3']},
+  {id:'C3',name:'Dr. Mei Lin',role:'Mission scientist',color:'#a78bfa',size:0.94,
+   bio:'Quiet and focused on her experiments. Misses her family back on Earth most on long weeks.',traits:['Researcher','Introvert','Journals daily']},
+  {id:'C4',name:'Spec. Tobi Okafor',role:'Mission specialist',color:'#3fd49b',size:1.02,
+   bio:'Runs spacewalks and fixes things outside. Loves the gym and snacks between shifts.',traits:['Spacewalker','Gym lover','Snacker']}
 ];
 // ISS: REAL NASA OSDR RadLab data (DOSTEL1+2, Columbus, 1 Mar 2022): ~280 uGy/day absorbed = 0.28 mGy/day.
 // Mars settings: approximate placeholder rates (mSv/day) until real data is added.
@@ -459,7 +467,7 @@ for(let i=0;i<3;i++)add(new THREE.SphereGeometry(0.012,12,8),new THREE.MeshBasic
 add(cap(0.17,0.06),suit2,0,0.87,0,0,0,0,1.15,1,0.85);                                        // waist
 const J={};
 [1,-1].forEach(s=>{
-  P=body;add(new THREE.SphereGeometry(0.085,24,16),suit,0.27*s,1.37,0);                    // shoulder
+  P=body;add(new THREE.SphereGeometry(0.085,24,16),accentM,0.27*s,1.37,0);                    // shoulder
   const arm=new THREE.Group();arm.position.set(0.27*s,1.37,0);body.add(arm);P=arm;          // shoulder joint
   add(cap(0.068,0.24),suit,0.06*s,-0.18,0,0,0,0.22*s);                                      // upper arm
   add(new THREE.TorusGeometry(0.066,0.012,10,32),accentM,0.085*s,-0.29,0,Math.PI/2,0,0.2*s);
@@ -527,6 +535,8 @@ function akey(site){return S.crew+'|'+S.day+'|'+site}
 function render(){
   const c=CREW.find(x=>x.id===S.crew);$('crewname').textContent=c.name;
   $('crewsub').textContent=c.role+' · '+ENV[S.env].label+' · mission day '+S.day;
+  $('crewbio').textContent=c.bio;$('crewtraits').innerHTML=c.traits.map(t=>`<span style="border-color:${c.color}66;color:${c.color}">${t}</span>`).join('');
+  accentM.color.set(c.color);body.scale.setScalar(c.size);$('crewname').style.color=c.color;
   $('dayv').textContent=S.day;
   $('link').textContent='Message delay to Earth: '+ENV[S.env].delay+'. The crew acts first; the flight surgeon confirms.';
   $('foot').textContent=ENV[S.env].real?'vitals simulated (seed 42) · radiation REAL: NASA OSDR RadLab, ISS, 1 Mar 2022':'vitals simulated (seed 42) · radiation here: placeholder rate · switch to Low Earth orbit for real NASA data';
@@ -564,7 +574,7 @@ const LOCS=[{id:'iss',n:'Space station',g:'orbit',c:'radial-gradient(circle at 3
   {id:'surface',n:'Mars base',g:'surface',c:'linear-gradient(#0d161f 50%,#a64a2a 50%)'}];
 function renderTop(){
   $('roster').innerHTML=CREW.map(c=>{const st=statusAt(c.id,S.day).w;const ini=c.name.split(' ').slice(1).map(x=>x[0]).join('');
-    return `<button type="button" role="tab" aria-selected="${c.id===S.crew}" class="who-b ${c.id===S.crew?'on':''}" data-crew="${c.id}" title="${c.name}: ${LBL[st]}"><span class="av" style="border-color:${COL[st]}">${ini}</span><span class="nm2"><b>${c.name.split(' ').slice(1).join(' ')}</b><small>${c.role} · ${LBL[st]}</small></span></button>`}).join('');
+    return `<button type="button" role="tab" aria-selected="${c.id===S.crew}" class="who-b ${c.id===S.crew?'on':''}" data-crew="${c.id}" title="${c.name}: ${LBL[st]}"><span class="av" style="border-color:${COL[st]};background:${c.color};color:#06181b">${ini}</span><span class="nm2"><b>${c.name.split(' ').slice(1).join(' ')}</b><small>${c.role} · ${LBL[st]}</small></span></button>`}).join('');
   $('locs').innerHTML=LOCS.map(l=>`<button type="button" role="tab" aria-selected="${l.id===S.env}" class="loc-b ${l.id===S.env?'on':''}" data-loc="${l.id}"><span class="ic" style="background:${l.c}"></span>${l.n}</button>`).join('');
   document.querySelectorAll('[data-crew]').forEach(b=>b.onclick=()=>{S.crew=b.dataset.crew;$('crew').value=S.crew;S.done.clear();render()});
   document.querySelectorAll('[data-loc]').forEach(b=>b.onclick=()=>{S.env=b.dataset.loc;$('env').value=S.env;render()});
