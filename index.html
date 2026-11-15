@@ -189,6 +189,7 @@ hr{border:0;border-top:1px solid var(--line);margin:2px 0}
           <div><b>Hazard</b><span id="gh"></span></div>
           <div><b>Do now</b><span id="gd"></span></div>
           <div><b>Escalate</b><span id="ge"></span></div>
+          <div><b>Source</b><span><a id="gs" style="color:var(--accent)" target="_blank" rel="noopener"></a></span></div>
         </div>
         <div class="btns" id="cardbtns"></div>
         <div class="delay" id="delaymsg" hidden></div>
@@ -344,27 +345,32 @@ const RULES={
 const RANK={ok:0,watch:1,act:2};
 
 /* ---------- guidance (draft text; Nandini replaces with sourced HRP/OSDR wording) ---------- */
-const GUIDE={
-  head:{means:'Sleep hours and a daily mood check-in (1–5). Both shift early when crews are under strain.',
-        hazard:'Isolation and confinement; distance from Earth; disrupted light and sleep cycles.',
-        now:'Protect an 8-hour sleep window, dim screens before rest, use the private call slot, log mood again tomorrow.',
-        esc:'Contact the flight surgeon if sleep stays under 5 h for 2 nights or mood stays at 2 or lower for 4 days.'},
-  forehead:{means:'Core body temperature. A rise can be the first sign of infection.',
-        hazard:'Hostile closed environment: shared air and surfaces, and immune changes in spaceflight.',
-        now:'Re-measure in 1 hour, hydrate, rest, and limit close contact with the rest of the crew.',
-        esc:'Contact the flight surgeon at 38 °C or above for 2 days, or sooner with new symptoms.'},
-  heart:{means:'Resting heart rate and blood pressure, compared with this crew member’s own first-week baseline.',
-        hazard:'Altered gravity (fluid shifts, heart deconditioning) plus stress and sleep debt.',
-        now:'Re-measure after 5 minutes seated, hydrate, keep the exercise plan, avoid caffeine late in the day.',
-        esc:'Contact the flight surgeon if resting HR is 15+ bpm above baseline for 3 days, over 100 bpm, or BP over 140/90.'},
-  arm:{means:'Blood sugar (mg/dL), a simple marker of diet, stress and metabolism.',
-        hazard:'Inadequate nutrition and changed metabolism on long missions.',
-        now:'Check meal timing and intake, re-test fasting tomorrow morning, log what was eaten.',
-        esc:'Contact the flight surgeon if readings stay above 180 or below 70 mg/dL.'},
+const GUIDE={ // text by Nandani Chauhan, from NASA HRP / Human Research Roadmap
+  head:{means:'Tracks sleep duration, sleep quality and mood to catch cognitive fatigue, irritability or sleep deprivation on long missions.',
+        hazard:'Isolation and confinement; distance from Earth.',
+        now:'Log daily sleep hours, practise the prescribed relaxation routine, and review circadian lighting in the habitat module.',
+        esc:'Alerts Act after under 5 h sleep for 2 nights or mood 2/5 or lower for 4 days. Call at once if sleep stays under 4 h for 3 nights, or for acute depressive symptoms or behaviour changes.',
+        src:['Human Research Roadmap','https://humanresearchroadmap.nasa.gov/Risks/']},
+  forehead:{means:'Monitors body temperature for early signs of infection, heat exhaustion or hypothermia in a pressurised habitat.',
+        hazard:'Hostile closed environment.',
+        now:'Rehydrate, check the habitat life-support thermal controls, and rest. Re-measure in 1 hour.',
+        esc:'Alerts Act at 38 °C or above for 2 days. Call at once above 38.3 °C or below 35 °C, or with chills and persistent tremors.',
+        src:['HRP: 5 hazards','https://www.nasa.gov/hrp/hazards/']},
+  heart:{means:'Resting heart rate and blood pressure, compared with this crew member’s own first-week baseline, to track orthostatic tolerance and cardiovascular conditioning.',
+        hazard:'Altered gravity (fluid shifts), plus stress and sleep debt.',
+        now:'Stop physical exertion, sit or lie down in a safe position, and drink electrolyte fluids. Re-measure after 5 minutes.',
+        esc:'Alerts Act if resting HR is 15+ bpm above baseline for 3 days, over 100 bpm, or BP over 140/90. Call at once if systolic BP is below 90 or above 160 mmHg at rest.',
+        src:['HRP: risks','https://www.nasa.gov/hrp/risks/']},
+  arm:{means:'Monitors glucose to assess metabolic stability, nutrition and the stress response on a changed diet.',
+        hazard:'Hostile closed environment; inadequate nutrition on long missions.',
+        now:'If low, take fast-acting carbohydrate. If high, log meal composition and follow the structured exercise protocol.',
+        esc:'Alerts Act above 180 or below 70 mg/dL for 2 days. Call at once below 50 or above 250 mg/dL despite corrective steps.',
+        src:['Human Research Roadmap','https://humanresearchroadmap.nasa.gov/Risks/']},
   dosimeter:{means:'Daily radiation dose from the personal dosimeter. On the station this uses real NASA RadLab readings (absorbed dose, mGy per day).',
-        hazard:'Space radiation, the first of the five hazards; solar storms can spike it in hours.',
-        now:'On a spike: move to the shielded storm shelter and follow the shelter procedure until levels drop.',
-        esc:'Report any spike to mission control at once and track the running total against the mission limit.'}
+        hazard:'Space radiation: galactic cosmic rays and solar particle events.',
+        now:'If a solar flare warning is active, move at once to the storm shelter or high-shielding core of the habitat.',
+        esc:'Alerts Act on a spike above 5 mSv/day. Report any unexpected spike, or a total above the mission-phase limit, to mission control and the flight surgeon.',
+        src:['NASA OSDR RadLab','https://visualization.osdr.nasa.gov/radlab/gui/overview/']}
 };
 const SITES=[
   {id:'head',name:'Head',sub:'Sleep · mood',inds:['sleep','mood'],pos:[0,1.9,0.06]},
@@ -550,7 +556,7 @@ function render(){
   if(S.sel){const s=SITES.find(x=>x.id===S.sel),st=siteStatus(s),g=GUIDE[s.id];$('card').hidden=false;
     $('ct').textContent=s.name+' · '+s.sub;$('cp').className='pill '+st;$('cp').textContent=LBL[st];
     $('reads').innerHTML=s.inds.map(i=>{const rr=RULES[i](S.crew,S.day,S.env);return `<div class="read"><div class="k">${IND[i].k}</div><div class="val">${readTxt(i)} <small style="font-size:11px;color:var(--muted)">${unit(i)}</small></div><div class="rng">${i==='radiation'?(ENV[S.env].real?'REAL · NASA RadLab, ISS':'placeholder rate'):(rr[0]==='ok'?'normal '+IND[i].rng:rr[1])}</div>${spark(i)}</div>`}).join('')+(s.id==='dosimeter'&&ENV[S.env].real?radlabChart():'');
-    $('gm').textContent=g.means;$('gh').textContent=g.hazard;$('gd').textContent=g.now;$('ge').textContent=g.esc;
+    $('gm').textContent=g.means;$('gh').textContent=g.hazard;$('gd').textContent=g.now;$('ge').textContent=g.esc;$('gs').textContent=g.src[0];$('gs').href=g.src[1];
     const a=S.acks[akey(s.id)];
     if(st==='ok'){$('cardbtns').innerHTML='<span class="empty">No action needed. Keep the routine and log again tomorrow.</span>';$('delaymsg').hidden=true}
     else{$('cardbtns').innerHTML=`<button class="btn warn" id="ack" type="button" ${a?'disabled':''}>${a==='ack'||a==='esc'?'Acknowledged':'Acknowledge'}</button><button class="btn danger" id="esc" type="button" ${a==='esc'?'disabled':''}>${a==='esc'?'Escalated':'Escalate to flight surgeon'}</button>`;
