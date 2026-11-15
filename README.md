@@ -2,7 +2,7 @@
 
 **A 3D health monitor that helps astronauts read their own health, get clear guidance, and act first when Earth is minutes away.**
 
-NASA Space Apps Challenge Singapore 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions* · Team **Cloud Catalyst** (Edmund Anthony, Nandani Chauhan)
+NASA Space Apps Challenge 2026 (Universal Event) · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions* · Team **Cloud Catalyst** (Edmund Anthony, Nandani Chauhan)
 
 - **Live app:** https://edmundzen.github.io/crew-health-ops/
 - **User manual (PDF):** [docs/Crew_Health_Ops_User_Manual.pdf](docs/Crew_Health_Ops_User_Manual.pdf)
@@ -34,6 +34,18 @@ Alert thresholds (Watch / Act) are design choices for this prototype, informed b
 
 ## How to run
 It is a single static page. Open the live link, or download `index.html` and open it in Chrome, Edge or Firefox (internet needed once to load Three.js and fonts).
+
+## Use of AI / Attribution
+| Part | AI involvement |
+|---|---|
+| `index.html` (3D app: scene, astronaut, animations, alert rules, UI) | Written with **Claude** (Anthropic) as a coding assistant, directed and tested by the team |
+| 3D visuals and screenshots in the app, deck and manual | **AI-generated with Claude** (procedural 3D graphics); labelled in the app header and on every slide |
+| Banner image, user manual (`docs/`), pitch deck layout | Made with AI assistance (Claude); labelled |
+| Guidance card text | Written by the team (Nandani Chauhan) from NASA HRP sources; edited for accuracy |
+| Data choice and processing | Team selected the NASA RadLab file; daily dose and chart computed from it |
+| `data/` | NASA OSDR RadLab export (unchanged) and the team's resource list |
+
+No AI-generated photos are presented as real. NASA data is unmodified apart from the daily-dose calculation.
 
 ## Built with
 Three.js (3D), plain HTML/CSS/JavaScript, GitHub Pages hosting. Built with Claude as a coding assistant; guidance text written by the team from NASA HRP sources.
